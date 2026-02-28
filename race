@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartoon Race 3 Lane</title>
+
+<style>
+body{
+    margin:0;
+    background:#87CEEB;
+    font-family:Arial;
+    overflow:hidden;
+    text-align:center;
+}
+
+/* SEÇİM EKRANI */
+#menu{
+    padding-top:40px;
+}
+
+.car-option{
+    width:80px;
+    margin:10px;
+    cursor:pointer;
+}
+
+#game{
+    display:none;
+    position:relative;
+    width:300px;
+    height:500px;
+    margin:20px auto;
+    background:#333;
+    overflow:hidden;
+    border-radius:15px;
+}
+
+/* Yol çizgisi animasyonu */
+.road-line{
+    position:absolute;
+    width:6px;
+    height:40px;
+    background:white;
+    left:147px;
+    animation: moveRoad 0.5s linear infinite;
+}
+
+@keyframes moveRoad{
+    from{ top:-40px; }
+    to{ top:500px; }
+}
+
+.player, .enemy{
+    position:absolute;
+    width:60px;
+    height:90px;
+}
+
+.score{
+    font-size:20px;
+    margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+    <h2>Arabanı Seç 🚗</h2>
+    <img src="car1.png" class="car-option" onclick="startGame('car1.png')">
+    <img src="car2.png" class="car-option" onclick="startGame('car2.png')">
+    <img src="car3.png" class="car-option" onclick="startGame('car3.png')">
+</div>
+
+<div class="score">Skor: <span id="score">0</span></div>
+
+<div id="game">
+    <div class="road-line"></div>
+</div>
+
+<script>
+const lanes = [20,120,220];
+let currentLane = 1;
+let speed = 4;
+let score = 0;
+let enemy;
+let player;
+let gameInterval;
+
+function startGame(carImg){
+    document.getElementById("menu").style.display="none";
+    document.getElementById("game").style.display="block";
+
+    player = document.createElement("img");
+    player.src = carImg;
+    player.classList.add("player");
+    player.style.bottom="20px";
+    player.style.left = lanes[currentLane]+"px";
+
+    document.getElementById("game").appendChild(player);
+
+    createEnemy();
+    gameInterval = setInterval(moveEnemy,20);
+}
+
+function createEnemy(){
+    enemy = document.createElement("img");
+    enemy.src = "car2.png";
+    enemy.classList.add("enemy");
+    let randomLane = Math.floor(Math.random()*3);
+    enemy.style.left = lanes[randomLane]+"px";
+    enemy.style.top="-100px";
+    document.getElementById("game").appendChild(enemy);
+}
+
+function moveEnemy(){
+    let top = parseInt(enemy.style.top);
+    top += speed;
+    enemy.style.top = top+"px";
+
+    if(top>500){
+        enemy.remove();
+        score++;
+        document.getElementById("score").innerText = score;
+        speed += 0.3;
+        createEnemy();
+    }
+
+    if(collide(player,enemy)){
+        clearInterval(gameInterval);
+        alert("Oyun Bitti! Skor: "+score);
+        location.reload();
+    }
+}
+
+function collide(a,b){
+    let aRect = a.getBoundingClientRect();
+    let bRect = b.getBoundingClientRect();
+    return !(
+        aRect.bottom < bRect.top ||
+        aRect.top > bRect.bottom ||
+        aRect.right < bRect.left ||
+        aRect.left > bRect.right
+    );
+}
+
+/* KONTROLLER */
+document.addEventListener("keydown",function(e){
+    if(e.key==="ArrowLeft" && currentLane>0){
+        currentLane--;
+    }
+    if(e.key==="ArrowRight" && currentLane<2){
+        currentLane++;
+    }
+    if(player) player.style.left=lanes[currentLane]+"px";
+});
+
+document.getElementById("game").addEventListener("touchstart",function(e){
+    let x=e.touches[0].clientX;
+    let rect=this.getBoundingClientRect();
+    let relative=x-rect.left;
+
+    if(relative<100 && currentLane>0) currentLane--;
+    else if(relative>200 && currentLane<2) currentLane++;
+
+    if(player) player.style.left=lanes[currentLane]+"px";
+});
+</script>
+
+</body>
+</html>
